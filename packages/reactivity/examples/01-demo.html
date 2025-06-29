@@ -29,16 +29,23 @@
       const count = ref(0)
       // console.log(count)
 
-      effect(
+      const runner = effect(
         () => {
+          // effect(() => {
+          //   console.log('2 count.value ==>', count.value)
+          // })
           console.log('1 count.value ==>', count.value)
+          return 1
         },
         {
           scheduler: () => {
+            const newValue = runner()
+            console.log('123', newValue)
             console.log('scheduler 1')
           },
         },
       )
+      console.log(runner)
 
       // effect(
       //   () => {

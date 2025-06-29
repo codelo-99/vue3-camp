@@ -33,4 +33,14 @@ export function effect(fn: Fn, options?: { scheduler?: Fn }) {
     Object.assign(e, options)
   }
   e.run()
+  /**
+   * 绑定函数的 this
+   */
+  const runner = e.run.bind(e)
+
+  /**
+   * 把 effect 的实例, 放到函数属性中
+   */
+  runner.effect = e
+  return runner
 }
