@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+  </head>
+  <body style="padding: 150px">
+    <button id="btn">按钮</button>
+
+    <!--<script type="module">-->
+    <!--  import {-->
+    <!--    ref,-->
+    <!--    effect,-->
+    <!--  } from '../../../node_modules/vue/dist/vue.esm-browser.js'-->
+
+    <!--  const count = ref(0)-->
+    <!--  console.log(count)-->
+
+    <!--  effect(() => {-->
+    <!--    console.log('count.value ==>', count.value)-->
+    <!--  })-->
+    <!--  //-->
+    <!--  // setTimeout(() => count.value++, 1000)-->
+    <!--</script>-->
+
+    <script type="module">
+      import { ref, effect } from '../dist/index.esm.js'
+
+      const count = ref(0)
+      // console.log(count)
+
+      effect(() => {
+        // effect(() => {
+        //   console.log('1 count.value ==>', count.value)
+        // })
+        console.log('2 count.value ==>', count.value)
+      })
+      //
+      // setTimeout(() => count.value++, 1000)
+
+      btn.onclick = () => {
+        count.value++
+      }
+    </script>
+  </body>
+</html>
