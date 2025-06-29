@@ -29,14 +29,29 @@
       const count = ref(0)
       // console.log(count)
 
-      effect(() => {
-        // effect(() => {
-        //   console.log('1 count.value ==>', count.value)
-        // })
-        console.log('2 count.value ==>', count.value)
-      })
-      //
-      // setTimeout(() => count.value++, 1000)
+      effect(
+        () => {
+          console.log('1 count.value ==>', count.value)
+        },
+        {
+          scheduler: () => {
+            console.log('scheduler 1')
+          },
+        },
+      )
+
+      // effect(
+      //   () => {
+      //     console.log('2 count.value ==>', count.value)
+      //   },
+      //   {
+      //     scheduler: () => {
+      //       console.log('scheduler 2')
+      //     },
+      //   },
+      // )
+
+      setTimeout(() => count.value++, 1000)
 
       btn.onclick = () => {
         count.value++

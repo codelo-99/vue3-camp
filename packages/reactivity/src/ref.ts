@@ -1,20 +1,8 @@
-import { activeSub, ReactiveEffect } from './effect'
+import { activeSub } from './effect'
+import { Dep, link, propagate } from './system'
 
 enum ReactiviFlags {
   IS_REF = '__v_isRef',
-}
-
-export class Dep {
-  subs: Link | undefined
-}
-
-export class Link {
-  dep: Dep
-  sub: ReactiveEffect
-  constructor(dep: Dep, sub: ReactiveEffect) {
-    this.dep = dep
-    this.sub = sub
-  }
 }
 
 export class RefImpl {
@@ -33,7 +21,7 @@ export class RefImpl {
   }
   set value(newValue) {
     this._value = newValue
-    trigger(this)
+    trigger(this.dep)
   }
 }
 
@@ -41,21 +29,18 @@ export class RefImpl {
  * 收集依赖
  */
 function track(self: RefImpl) {
-  console.log('收集依赖', self)
   if (activeSub) {
-    if (!self.dep.subs) {
-      self.dep.subs = new Link(self.dep, activeSub)
-    }
+    link(self.dep, activeSub)
   }
 }
 
 /**
  * 触发更新
  */
-function trigger(self: RefImpl) {
-  console.log(self)
-  // self.dep.forEach(fn => fn())
-  self.dep.subs.sub.fn()
+function trigger(dep: Dep) {
+  if (dep.subs) {
+    propagate(dep.subs)
+  }
 }
 
 export function ref(value) {

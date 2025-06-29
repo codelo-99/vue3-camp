@@ -1,4 +1,4 @@
-import { Link } from './ref'
+import { Link } from './system'
 
 interface Fn {
   (...args: any[]): any
@@ -9,14 +9,28 @@ export let activeSub: ReactiveEffect | undefined
 export class ReactiveEffect {
   deps: Link
   depsTail: Link
-  fn: Fn
-  constructor(fn: Fn) {
-    this.fn = fn
+  constructor(public fn) {}
+  run() {
+    const prevSub = activeSub
+    activeSub = this
+    try {
+      return this.fn()
+    } finally {
+      activeSub = prevSub
+    }
+  }
+  scheduler() {
+    this.run()
+  }
+  notify() {
+    this.scheduler()
   }
 }
 
-export function effect(fn: Fn) {
-  activeSub = new ReactiveEffect(fn)
-  fn()
-  activeSub = undefined
+export function effect(fn: Fn, options?: { scheduler?: Fn }) {
+  const e = new ReactiveEffect(fn)
+  if (options) {
+    Object.assign(e, options)
+  }
+  e.run()
 }

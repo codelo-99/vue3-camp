@@ -1,31 +1,72 @@
 // packages/reactivity/src/effect.ts
 var activeSub;
 var ReactiveEffect = class {
-  deps;
-  depsTail;
-  fn;
   constructor(fn) {
     this.fn = fn;
   }
+  deps;
+  depsTail;
+  run() {
+    const prevSub = activeSub;
+    activeSub = this;
+    try {
+      return this.fn();
+    } finally {
+      activeSub = prevSub;
+    }
+  }
+  scheduler() {
+    this.run();
+  }
+  notify() {
+    this.scheduler();
+  }
 };
-function effect(fn) {
-  activeSub = new ReactiveEffect(fn);
-  fn();
-  activeSub = void 0;
+function effect(fn, options) {
+  const e = new ReactiveEffect(fn);
+  if (options) {
+    Object.assign(e, options);
+  }
+  e.run();
 }
 
-// packages/reactivity/src/ref.ts
+// packages/reactivity/src/system.ts
 var Dep = class {
   subs;
+  subsTail;
 };
 var Link = class {
   dep;
   sub;
+  nextSub;
+  prevSub;
   constructor(dep, sub) {
     this.dep = dep;
     this.sub = sub;
   }
 };
+function link(dep, sub) {
+  const link2 = new Link(dep, sub);
+  if (!dep.subsTail) {
+    dep.subs = link2;
+    dep.subsTail = link2;
+  } else {
+    dep.subsTail.nextSub = link2;
+    link2.prevSub = dep.subsTail;
+    dep.subsTail = link2;
+  }
+}
+function propagate(subs) {
+  let link2 = subs;
+  const queuedEffects = [];
+  while (link2) {
+    queuedEffects.push(link2.sub);
+    link2 = link2.nextSub;
+  }
+  queuedEffects.forEach((effect2) => effect2.notify());
+}
+
+// packages/reactivity/src/ref.ts
 var RefImpl = class {
   // 保存实际的值
   _value;
@@ -41,20 +82,18 @@ var RefImpl = class {
   }
   set value(newValue) {
     this._value = newValue;
-    trigger(this);
+    trigger(this.dep);
   }
 };
 function track(self) {
-  console.log("\u6536\u96C6\u4F9D\u8D56", self);
   if (activeSub) {
-    if (!self.dep.subs) {
-      self.dep.subs = new Link(self.dep, activeSub);
-    }
+    link(self.dep, activeSub);
   }
 }
-function trigger(self) {
-  console.log(self);
-  self.dep.subs.sub.fn();
+function trigger(dep) {
+  if (dep.subs) {
+    propagate(dep.subs);
+  }
 }
 function ref(value) {
   return new RefImpl(value);
@@ -70,6 +109,8 @@ export {
   activeSub,
   effect,
   isRef,
+  link,
+  propagate,
   ref
 };
 //# sourceMappingURL=index.esm.js.map
