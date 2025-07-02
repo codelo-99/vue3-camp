@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-cn">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+  </head>
+  <body>
+    <button id="btn1">count++</button>
+    <script type="module">
+      // import {
+      //   ref,
+      //   effect,
+      // } from '../../../node_modules/vue/dist/vue.esm-browser.js'
+
+      import { ref, effect } from '../dist/index.esm.js'
+
+      console.dir(ref)
+
+      const count = ref(0)
+      const flag = ref(true)
+      console.log('count', count)
+      console.log('flag', flag)
+
+      const e = effect(() => {
+        count.value
+        flag.value
+
+        console.count('effect')
+      })
+      console.dir(e)
+
+      btn1.onclick = () => {
+        count.value++
+      }
+    </script>
+  </body>
+</html>

@@ -49,7 +49,6 @@ const outfile = resolve(
 )
 
 const pkg = require(`../packages/${target}/package.json`)
-console.log(pkg)
 
 esbuild
   .context({

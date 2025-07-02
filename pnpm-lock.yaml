@@ -27,6 +27,10 @@ importers:
 
   packages/reactivity: {}
 
+  packages/shared: {}
+
+  packages/vue: {}
+
 packages:
 
   '@babel/helper-string-parser@7.27.1':
