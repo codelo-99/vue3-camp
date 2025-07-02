@@ -1,4 +1,4 @@
-import { Link } from './system'
+import { endTrack, Link, startTrack } from './system'
 
 interface Fn {
   (...args: any[]): any
@@ -7,15 +7,23 @@ interface Fn {
 export let activeSub: ReactiveEffect | undefined
 
 export class ReactiveEffect {
-  deps: Link
-  depsTail: Link
+  deps: Link | undefined
+  depsTail: Link | undefined
+  tracking = false
+
   constructor(public fn) {}
   run() {
     const prevSub = activeSub
     activeSub = this
+    // if (this.deps && this.deps.dep) {
+    //   this.deps.dep.subsTail = undefined
+    // }
+
+    startTrack(this)
     try {
       return this.fn()
     } finally {
+      endTrack(this)
       activeSub = prevSub
     }
   }

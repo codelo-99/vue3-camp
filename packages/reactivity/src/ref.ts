@@ -16,7 +16,7 @@ export class RefImpl {
     this._value = value
   }
   get value() {
-    track(this)
+    track(this.dep)
     return this._value
   }
   set value(newValue) {
@@ -28,9 +28,9 @@ export class RefImpl {
 /**
  * 收集依赖
  */
-function track(self: RefImpl) {
+function track(dep: Dep) {
   if (activeSub) {
-    link(self.dep, activeSub)
+    link(dep, activeSub)
   }
 }
 

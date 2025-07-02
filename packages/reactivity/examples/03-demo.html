@@ -5,23 +5,9 @@
     <title>Title</title>
   </head>
   <body style="padding: 150px">
-    <button id="btn">按钮</button>
-
-    <!--<script type="module">-->
-    <!--  import {-->
-    <!--    ref,-->
-    <!--    effect,-->
-    <!--  } from '../../../node_modules/vue/dist/vue.esm-browser.js'-->
-
-    <!--  const count = ref(0)-->
-    <!--  console.log(count)-->
-
-    <!--  effect(() => {-->
-    <!--    console.log('count.value ==>', count.value)-->
-    <!--  })-->
-    <!--  //-->
-    <!--  // setTimeout(() => count.value++, 1000)-->
-    <!--</script>-->
+    <div>解决递归循环, 在effect中访问并修改ref.value</div>
+    <button id="btn">count++</button>
+    <button id="btn2">flag切换</button>
 
     <script type="module">
       // import {
@@ -36,12 +22,7 @@
 
       const runner = effect(
         () => {
-          // effect(() => {
-          //   console.log('2 count.value ==>', count.value)
-          // })
-          flag.value
-          console.log('1 count.value ==>', count.value)
-          return 1
+          console.count('effect', count.value++)
         },
         // {
         // scheduler: () => {
@@ -68,6 +49,9 @@
 
       btn.onclick = () => {
         count.value++
+      }
+      btn2.onclick = () => {
+        flag.value = !flag.value
       }
 
       // effect(() => {

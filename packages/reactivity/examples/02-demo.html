@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+  </head>
+  <body style="padding: 150px">
+    <button id="flagBtn">flagBtn</button>
+    <button id="nameBtn">nameBtn</button>
+    <button id="ageBtn">ageBtn</button>
+
+    <div id="app"></div>
+
+    <script type="module">
+      // import {
+      //   ref,
+      //   effect,
+      // } from '../../../node_modules/vue/dist/vue.esm-browser.js'
+      import { ref, effect } from '../dist/index.esm.js'
+
+      const flag = ref(true)
+      const name = ref('远方os')
+      const age = ref(18)
+      console.log({
+        flag,
+        name,
+        age,
+      })
+
+      effect(() => {
+        console.count('efffect')
+        if (flag.value) {
+          app.innerHTML = name.value
+        } else {
+          app.innerHTML = age.value
+        }
+      })
+
+      flagBtn.onclick = () => {
+        flag.value = !flag.value
+      }
+      nameBtn.onclick = () => {
+        name.value = name.value + Math.random()
+      }
+      ageBtn.onclick = () => {
+        age.value++
+      }
+    </script>
+  </body>
+</html>
