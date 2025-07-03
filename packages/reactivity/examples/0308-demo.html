@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+  </head>
+  <body style="padding: 150px">
+    <div>解决递归循环, 在effect中访问并修改ref.value</div>
+    <button id="btn">count++</button>
+    <button id="btn2">flag切换</button>
+
+    <script type="module">
+      // import {
+      //   ref,
+      //   effect,
+      // } from '../../../node_modules/vue/dist/vue.esm-browser.js'
+      import { ref, effect } from '../dist/index.esm.js'
+
+      const count = ref(0)
+      console.log(count)
+
+      const runner = effect(() => {
+        count.value++
+      })
+      console.dir(runner)
+    </script>
+  </body>
+</html>
