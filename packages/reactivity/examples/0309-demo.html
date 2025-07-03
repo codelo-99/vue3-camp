@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+  </head>
+  <body style="padding: 150px">
+    <div>reactive</div>
+    <button id="btn">count++</button>
+
+    <script type="module">
+      // import {
+      //   ref,
+      //   effect,
+      //   reactive,
+      // } from '../../../node_modules/vue/dist/vue.esm-browser.js'
+      import { ref, effect, reactive } from '../dist/index.esm.js'
+
+      const obj = {
+        a: 1,
+      }
+      const state = reactive(obj)
+      const state2 = reactive(obj)
+      console.log('state ==>', state)
+      console.log('state2 ==>', state2)
+      console.log(state === state2)
+
+      effect(() => {
+        console.log('state.a ==>', state.a)
+      })
+
+      setTimeout(() => {
+        // state.a++
+      }, 1000)
+
+      btn.onclick = () => {
+        state.a++
+      }
+    </script>
+  </body>
+</html>

@@ -1,5 +1,6 @@
 export * from './ref'
 export * from './effect'
+export * from './reactive'
 export { propagate } from './system'
 export { link } from './system'
 export { Link } from './system'

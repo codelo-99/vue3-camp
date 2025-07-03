@@ -162,16 +162,74 @@ function ref(value) {
 function isRef(value) {
   return !!(value && value["__v_isRef" /* IS_REF */]);
 }
+
+// packages/shared/src/index.ts
+function isObject(value) {
+  return typeof value === "object" && value !== null;
+}
+
+// packages/reactivity/src/reactive.ts
+function createReactiveObject(target) {
+  if (!isObject(target)) return target;
+  const proxy = new Proxy(target, {
+    get(target2, p, receiver) {
+      track2(target2, p, receiver);
+      return Reflect.get(target2, p);
+    },
+    set(target2, p, newValue, receiver) {
+      const result = Reflect.set(target2, p, newValue);
+      trigger2(target2, p, newValue, receiver);
+      return result;
+    }
+  });
+  return proxy;
+}
+var reactiveMap = /* @__PURE__ */ new WeakMap();
+console.log(reactiveMap);
+function track2(target, p, receiver) {
+  if (activeSub) {
+    let depsMap = reactiveMap.get(target);
+    if (!depsMap) {
+      depsMap = /* @__PURE__ */ new Map();
+      reactiveMap.set(target, depsMap);
+    }
+    let dep = depsMap.get(p);
+    if (!dep) {
+      dep = new Dep();
+      depsMap.set(p, dep);
+    }
+    link(dep, activeSub);
+  }
+}
+function trigger2(target, p, newValue, receiver) {
+  const depsMap = reactiveMap.get(target);
+  if (depsMap) {
+    const dep = depsMap.get(p);
+    if (dep && dep.subs) {
+      propagate(dep.subs);
+    }
+  }
+}
+function reactive(value) {
+  return createReactiveObject(value);
+}
+var reactiveSet = /* @__PURE__ */ new WeakSet();
+function isReactive(proxy) {
+  return reactiveSet.has(proxy);
+}
 export {
   Dep,
   Link,
   ReactiveEffect,
   RefImpl,
   activeSub,
+  createReactiveObject,
   effect,
+  isReactive,
   isRef,
   link,
   propagate,
+  reactive,
   ref
 };
 //# sourceMappingURL=index.esm.js.map
