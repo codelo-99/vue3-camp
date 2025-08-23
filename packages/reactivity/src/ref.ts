@@ -1,5 +1,7 @@
 import { activeSub } from './effect'
 import { Dep, link, propagate } from './system'
+import { hasChanged, isObject } from '@vue/shared'
+import { reactive } from './reactive'
 
 enum ReactiviFlags {
   IS_REF = '__v_isRef',
@@ -13,15 +15,21 @@ export class RefImpl {
 
   dep = new Dep()
   constructor(value) {
-    this._value = value
+    /**
+     * 如果 value 是一个对象, 那么我们使用 reactive 对它处理为响应式对象
+     */
+    this._value = isObject(value) ? reactive(value) : value
   }
   get value() {
     track(this.dep)
     return this._value
   }
   set value(newValue) {
-    this._value = newValue
-    trigger(this.dep)
+    const oldValue = this._value
+    this._value = isObject(newValue) ? reactive(newValue) : newValue
+    if (hasChanged(newValue, oldValue)) {
+      trigger(this.dep)
+    }
   }
 }
 

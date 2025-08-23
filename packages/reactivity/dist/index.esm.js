@@ -127,6 +127,71 @@ function effect(fn, options) {
   return runner;
 }
 
+// packages/shared/src/index.ts
+function isObject(value) {
+  return typeof value === "object" && value !== null;
+}
+function hasChanged(newValue, oldValue) {
+  return !Object.is(newValue, oldValue);
+}
+
+// packages/reactivity/src/reactive.ts
+var mutableHandlers = {
+  get(target, key, receiver) {
+    if (key === "__v_isReactive") return true;
+    track(target, key);
+    return Reflect.get(target, key, receiver);
+  },
+  set(target, key, newValue, receiver) {
+    const oldValue = target[key];
+    const result = Reflect.set(target, key, newValue, receiver);
+    if (hasChanged(newValue, oldValue)) {
+      trigger(target, key);
+    }
+    return result;
+  }
+};
+function reactive(target) {
+  return isReactive(target) ? target : createReactiveObject(target);
+}
+var reactiveMap = /* @__PURE__ */ new WeakMap();
+function createReactiveObject(target) {
+  if (!isObject(target)) {
+    return target;
+  }
+  if (isReactive(target)) return target;
+  const existingProxy = reactiveMap.get(target);
+  if (existingProxy) {
+    return existingProxy;
+  }
+  const proxy = new Proxy(target, mutableHandlers);
+  reactiveMap.set(target, proxy);
+  return proxy;
+}
+var targetMap = /* @__PURE__ */ new WeakMap();
+function track(target, key) {
+  if (!activeSub) return;
+  let depsMap = targetMap.get(target);
+  if (!depsMap) {
+    targetMap.set(target, depsMap = /* @__PURE__ */ new Map());
+  }
+  let dep = depsMap.get(key);
+  if (!dep) {
+    depsMap.set(key, dep = new Dep());
+  }
+  link(dep, activeSub);
+}
+function trigger(target, key) {
+  const depsMap = targetMap.get(target);
+  if (!depsMap) return;
+  const dep = depsMap.get(key);
+  if (!dep) return;
+  propagate(dep.subs);
+}
+function isReactive(value) {
+  return !!(value && value["__v_isReactive"]);
+}
+
 // packages/reactivity/src/ref.ts
 var RefImpl = class {
   // 保存实际的值
@@ -135,23 +200,26 @@ var RefImpl = class {
   ["__v_isRef" /* IS_REF */];
   dep = new Dep();
   constructor(value) {
-    this._value = value;
+    this._value = isObject(value) ? reactive(value) : value;
   }
   get value() {
-    track(this.dep);
+    track2(this.dep);
     return this._value;
   }
   set value(newValue) {
-    this._value = newValue;
-    trigger(this.dep);
+    const oldValue = this._value;
+    this._value = isObject(newValue) ? reactive(newValue) : newValue;
+    if (hasChanged(newValue, oldValue)) {
+      trigger2(this.dep);
+    }
   }
 };
-function track(dep) {
+function track2(dep) {
   if (activeSub) {
     link(dep, activeSub);
   }
 }
-function trigger(dep) {
+function trigger2(dep) {
   if (dep.subs) {
     propagate(dep.subs);
   }
@@ -168,10 +236,15 @@ export {
   ReactiveEffect,
   RefImpl,
   activeSub,
+  clearTracking,
   effect,
+  endTrack,
+  isReactive,
   isRef,
   link,
   propagate,
-  ref
+  reactive,
+  ref,
+  startTrack
 };
 //# sourceMappingURL=index.esm.js.map

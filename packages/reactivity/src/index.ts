@@ -1,6 +1,4 @@
 export * from './ref'
 export * from './effect'
-export { propagate } from './system'
-export { link } from './system'
-export { Link } from './system'
-export { Dep } from './system'
+export * from './system'
+export * from './reactive'

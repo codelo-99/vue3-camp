@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>进击对象的响应式 reactive</title>
+  </head>
+  <body style="padding: 150px">
+    <div>
+      1. 当 target 的属性是 get 函数. 解: 传递 receiver 给 Reflect.get 和
+      Reflect.set
+    </div>
+    <div>
+      2. 同1个 target 创建的 2个 reactive 需全等. 解: 新增全局变量 reactiveMap<
+      target, proxy >
+    </div>
+    <div>
+      3. 使用 reactive 响应式对象作为 reactive 函数的参数时, 应该直接返回该
+      reactive响应式对象
+    </div>
+    <div>4. 创建 proxy 时, 将 proxyHandler 存为变量, 避免重复创建</div>
+    <div>5. 创建 ref 时, 参数如果是对象, 自动返回 reactive 包裹</div>
+    <script type="module">
+      // import {
+      //   ref,
+      //   effect,
+      // } from '../../../node_modules/vue/dist/vue.esm-browser.js'
+      import { reactive, effect } from '../dist/index.esm.js'
+
+      const obj = {
+        a: 0,
+      }
+      const state = reactive(obj)
+      // const state2 = reactive(state)
+      // console.log(state === state2)
+
+      const runner = effect(() => {
+        console.log('state.a ==> ', state.a)
+      })
+
+      setTimeout(() => {
+        state.a = 0
+      }, 1000)
+    </script>
+  </body>
+</html>
