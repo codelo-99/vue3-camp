@@ -124,7 +124,8 @@ export function clearTracking(link: Link) {
 
     /**
      * 处理纵向链表
-     * 1. 如果有上一个节点, 就将上一个节点指向当前节点的下一个节点, 下一个节点的上一个节点指向
+     * 1. 如果当前节点有上一个节点, 就将上一个节点的nextSub指向当前节点的下一个节点, 当前节点的nextSub置空
+     * 2. 否则代表当前是头节点, 将头节点指针指向下一个节点
      */
     if (prevSub) {
       prevSub.nextSub = nextSub
@@ -133,17 +134,17 @@ export function clearTracking(link: Link) {
       link.dep.subs = nextSub
     }
 
+    /**
+     * 处理横向链表
+     * 1. 如果当前节点有下一个节点, 就把下一个节点的prevSub, 指向当前节点的上一个节点, 当前节点的prevSub置空
+     * 2. 否则代表当前节点是尾节点, 将尾节点指针指向当前节点的上一个节点
+     */
     if (nextSub) {
       nextDep.prevSub = prevSub
       link.prevSub = undefined
     } else {
       link.dep.subsTail = prevSub
     }
-
-    // 需优化
-    // link.dep.subs = undefined
-    // link.dep.subsTail = undefined
-    // 需优化end
 
     link.dep = undefined
     link.sub = undefined
