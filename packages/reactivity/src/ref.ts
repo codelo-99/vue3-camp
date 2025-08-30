@@ -1,7 +1,8 @@
 import { activeSub } from './effect'
-import { Dep, link, propagate } from './system'
+import { link, propagate } from './system'
 import { hasChanged, isObject } from '@vue/shared'
 import { reactive } from './reactive'
+import { Dep } from './dep'
 
 enum ReactiviFlags {
   IS_REF = '__v_isRef',
@@ -11,7 +12,7 @@ export class RefImpl {
   // 保存实际的值
   _value;
   // ref 标记, 证明是一个 ref
-  [ReactiviFlags.IS_REF]: true
+  [ReactiviFlags.IS_REF] = true
 
   dep = new Dep()
   constructor(value) {

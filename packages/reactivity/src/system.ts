@@ -1,9 +1,5 @@
 import { ReactiveEffect } from './effect'
-
-export class Dep {
-  subs: Link | undefined
-  subsTail: Link | undefined
-}
+import { Dep } from './dep'
 
 export class Link {
   dep: Dep

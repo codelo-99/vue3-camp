@@ -1,8 +1,4 @@
 // packages/reactivity/src/system.ts
-var Dep = class {
-  subs;
-  subsTail;
-};
 var Link = class {
   dep;
   sub;
@@ -135,20 +131,37 @@ function hasChanged(newValue, oldValue) {
   return !Object.is(newValue, oldValue);
 }
 
+// packages/reactivity/src/dep.ts
+var Dep = class {
+  subs;
+  subsTail;
+};
+
 // packages/reactivity/src/reactive.ts
 var mutableHandlers = {
   get(target, key, receiver) {
     if (key === "__v_isReactive") return true;
     track(target, key);
-    return Reflect.get(target, key, receiver);
+    const res = Reflect.get(target, key, receiver);
+    if (isRef(res)) {
+      return res.value;
+    }
+    if (isObject(res)) {
+      return reactive(res);
+    }
+    return res;
   },
   set(target, key, newValue, receiver) {
     const oldValue = target[key];
-    const result = Reflect.set(target, key, newValue, receiver);
+    const res = Reflect.set(target, key, newValue, receiver);
+    if (isRef(oldValue) && !isRef(newValue)) {
+      oldValue.value = newValue;
+      return res;
+    }
     if (hasChanged(newValue, oldValue)) {
       trigger(target, key);
     }
-    return result;
+    return res;
   }
 };
 function reactive(target) {
@@ -197,7 +210,7 @@ var RefImpl = class {
   // 保存实际的值
   _value;
   // ref 标记, 证明是一个 ref
-  ["__v_isRef" /* IS_REF */];
+  ["__v_isRef" /* IS_REF */] = true;
   dep = new Dep();
   constructor(value) {
     this._value = isObject(value) ? reactive(value) : value;

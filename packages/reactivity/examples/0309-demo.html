@@ -18,16 +18,21 @@
       reactive响应式对象
     </div>
     <div>4. 创建 proxy 时, 将 proxyHandler 存为变量, 避免重复创建</div>
-    <div>5. 创建 ref 时, 参数如果是对象, 自动返回 reactive 包裹</div>
+    <div>
+      5. 创建 ref 时, 参数如果是对象, 自动返回 reactive 包裹, 修改 reactive.ref
+      时,需要更新 ref.value
+    </div>
+    <div>6. 深层对象reactive, 子孙对象也需要返回 reactive 包裹</div>
     <script type="module">
       // import {
       //   ref,
       //   effect,
       // } from '../../../node_modules/vue/dist/vue.esm-browser.js'
-      import { reactive, effect } from '../dist/index.esm.js'
+      import { ref, reactive, effect } from '../dist/index.esm.js'
 
+      const a = ref(0)
       const obj = {
-        a: 0,
+        a,
       }
       const state = reactive(obj)
       // const state2 = reactive(state)
@@ -38,7 +43,7 @@
       })
 
       setTimeout(() => {
-        state.a = 0
+        state.a = 1
       }, 1000)
     </script>
   </body>
