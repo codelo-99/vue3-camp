@@ -4,7 +4,7 @@ import { hasChanged, isObject } from '@vue/shared'
 import { reactive } from './reactive'
 import { Dep } from './dep'
 
-enum ReactiviFlags {
+export enum ReactiveFlags {
   IS_REF = '__v_isRef',
 }
 
@@ -12,7 +12,7 @@ export class RefImpl {
   // 保存实际的值
   _value;
   // ref 标记, 证明是一个 ref
-  [ReactiviFlags.IS_REF] = true
+  [ReactiveFlags.IS_REF] = true
 
   dep = new Dep()
   constructor(value) {
@@ -61,5 +61,5 @@ export function ref(value) {
  * @param value
  */
 export function isRef(value) {
-  return !!(value && value[ReactiviFlags.IS_REF])
+  return !!(value && value[ReactiveFlags.IS_REF])
 }

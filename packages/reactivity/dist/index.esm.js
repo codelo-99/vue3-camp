@@ -35,13 +35,21 @@ function link(dep, sub) {
     sub.depsTail = link2;
   }
 }
+function processComputedUpdate(sub) {
+  sub.update();
+  propagate(sub.subs);
+}
 function propagate(subs) {
   let link2 = subs;
   const queuedEffects = [];
   while (link2) {
     const sub = link2.sub;
     if (!sub.tracking) {
-      queuedEffects.push(sub);
+      if ("update" in sub) {
+        processComputedUpdate(sub);
+      } else {
+        queuedEffects.push(sub);
+      }
     }
     link2 = link2.nextSub;
   }
@@ -87,6 +95,9 @@ function clearTracking(link2) {
 
 // packages/reactivity/src/effect.ts
 var activeSub;
+function setActiveSub(sub) {
+  activeSub = sub;
+}
 var ReactiveEffect = class {
   constructor(fn) {
     this.fn = fn;
@@ -96,13 +107,13 @@ var ReactiveEffect = class {
   tracking = false;
   run() {
     const prevSub = activeSub;
-    activeSub = this;
+    setActiveSub(this);
     startTrack(this);
     try {
       return this.fn();
     } finally {
       endTrack(this);
-      activeSub = prevSub;
+      setActiveSub(prevSub);
     }
   }
   scheduler() {
@@ -129,6 +140,9 @@ function isObject(value) {
 }
 function hasChanged(newValue, oldValue) {
   return !Object.is(newValue, oldValue);
+}
+function isFunction(value) {
+  return typeof value === "function";
 }
 
 // packages/reactivity/src/dep.ts
@@ -206,6 +220,10 @@ function isReactive(value) {
 }
 
 // packages/reactivity/src/ref.ts
+var ReactiveFlags = /* @__PURE__ */ ((ReactiveFlags2) => {
+  ReactiveFlags2["IS_REF"] = "__v_isRef";
+  return ReactiveFlags2;
+})(ReactiveFlags || {});
 var RefImpl = class {
   // 保存实际的值
   _value;
@@ -243,13 +261,85 @@ function ref(value) {
 function isRef(value) {
   return !!(value && value["__v_isRef" /* IS_REF */]);
 }
+
+// packages/reactivity/src/computed.ts
+var ComputedRefImpl = class {
+  //endregion
+  constructor(fn, setter) {
+    this.fn = fn;
+    this.setter = setter;
+  }
+  // computed 也是一个 ref, 通过 isRef 也返回 true
+  ["__v_isRef" /* IS_REF */] = true;
+  // 保存 fn 的返回值
+  _value;
+  //region 作为 dep, 要关联 subs, 等我的值更新了, 我要通知它们重新执行
+  /**
+   * 订阅者链表的头节点, 理解为我们讲的 head
+   */
+  subs;
+  /**
+   * 订阅者链表的尾节点, 理解为我们讲的 tail
+   */
+  subsTail;
+  //endregion
+  //region 作为 dep, 要关联 subs, 等我的值更新了, 我要通知它们重新执行
+  /**
+   * 依赖项链表的头节点
+   */
+  deps;
+  /**
+   * 依赖项链表的尾节点
+   */
+  depsTail;
+  tracking = false;
+  get value() {
+    this.update();
+    if (activeSub) {
+      link(this, activeSub);
+    }
+    return this._value;
+  }
+  set value(newValue) {
+    if (this.setter) {
+      this.setter(newValue);
+    } else {
+      console.warn("\u6211\u662F\u53EA\u8BFB\u7684, \u4F60\u522B\u778E\u73A9\u4E86");
+    }
+  }
+  update() {
+    const prevSub = activeSub;
+    setActiveSub(this);
+    startTrack(this);
+    try {
+      this._value = this.fn();
+    } finally {
+      endTrack(this);
+      setActiveSub(prevSub);
+    }
+  }
+};
+function computed(getterOrOptions) {
+  let getter;
+  let setter;
+  if (isFunction(getterOrOptions)) {
+    getter = getterOrOptions;
+  } else {
+    getter = getterOrOptions.get;
+    setter = getterOrOptions.set;
+  }
+  return new ComputedRefImpl(getter, setter);
+}
 export {
+  ComputedRefImpl,
   Dep,
   Link,
   ReactiveEffect,
+  ReactiveFlags,
   RefImpl,
   activeSub,
   clearTracking,
+  computed,
   effect,
   endTrack,
   isReactive,
@@ -258,6 +348,7 @@ export {
   propagate,
   reactive,
   ref,
+  setActiveSub,
   startTrack
 };
 //# sourceMappingURL=index.esm.js.map

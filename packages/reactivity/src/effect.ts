@@ -6,6 +6,10 @@ interface Fn {
 
 export let activeSub: ReactiveEffect | undefined
 
+export function setActiveSub(sub: ReactiveEffect) {
+  activeSub = sub
+}
+
 export class ReactiveEffect {
   deps: Link | undefined
   depsTail: Link | undefined
@@ -14,7 +18,7 @@ export class ReactiveEffect {
   constructor(public fn) {}
   run() {
     const prevSub = activeSub
-    activeSub = this
+    setActiveSub(this)
     // if (this.deps && this.deps.dep) {
     //   this.deps.dep.subsTail = undefined
     // }
@@ -24,7 +28,7 @@ export class ReactiveEffect {
       return this.fn()
     } finally {
       endTrack(this)
-      activeSub = prevSub
+      setActiveSub(prevSub)
     }
   }
   scheduler() {

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>computed计算属性实现原理</title>
+  </head>
+  <body style="padding: 150px">
+    <script type="module">
+      // import {
+      //   ref,
+      //   effect,
+      // } from '../../../node_modules/vue/dist/vue.esm-browser.js'
+      import { effect, ref, computed } from '../dist/index.esm.js'
+
+      const count = ref(2)
+      count.name = '我是count'
+
+      /**
+       * computed 它比较特殊
+       * 它既是一个 sub, 又是一个 dep
+       */
+      const c = computed(() => {
+        console.count('computed')
+        return count.value * 2
+      })
+      console.log(c)
+
+      effect(() => {
+        console.log(c.value)
+      })
+
+      setTimeout(() => {
+        count.value++
+      }, 1000)
+    </script>
+  </body>
+</html>

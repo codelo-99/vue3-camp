@@ -1,5 +1,6 @@
 import { ReactiveEffect } from './effect'
 import { Dep } from './dep'
+import { ComputedRefImpl } from './computed'
 
 export class Link {
   dep: Dep
@@ -61,6 +62,17 @@ export function link(dep: Dep, sub: ReactiveEffect) {
   }
 }
 
+function processComputedUpdate(sub: ComputedRefImpl) {
+  /**
+   * 更新计算属性
+   * 1. 调用 update
+   * 2. 通知 subs 链表上所有的 sub, 重新执行
+   */
+
+  sub.update()
+  propagate(sub.subs)
+}
+
 /**
  * 传播更新的函数
  * @param subs
@@ -71,7 +83,12 @@ export function propagate(subs: Link) {
   while (link) {
     const sub = link.sub
     if (!sub.tracking) {
-      queuedEffects.push(sub)
+      if ('update' in sub) {
+        // TODO 处理 computed
+        processComputedUpdate(sub)
+      } else {
+        queuedEffects.push(sub)
+      }
     }
     link = link.nextSub
   }
