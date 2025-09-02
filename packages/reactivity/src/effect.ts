@@ -1,12 +1,13 @@
 import { endTrack, Link, startTrack } from './system'
+import { Sub } from './dep'
 
 interface Fn {
   (...args: any[]): any
 }
 
-export let activeSub: ReactiveEffect | undefined
+export let activeSub: Sub | undefined
 
-export function setActiveSub(sub: ReactiveEffect) {
+export function setActiveSub(sub: Sub) {
   activeSub = sub
 }
 

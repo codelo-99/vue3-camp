@@ -1,15 +1,15 @@
 import { ReactiveEffect } from './effect'
-import { Dep } from './dep'
+import { Dep, Sub } from './dep'
 import { ComputedRefImpl } from './computed'
 
 export class Link {
   dep: Dep
-  sub: ReactiveEffect
+  sub: Sub
   nextSub: Link | undefined
   prevSub: Link | undefined
   nextDep: Link | undefined
 
-  constructor(dep: Dep, sub: ReactiveEffect) {
+  constructor(dep: Dep, sub: Sub) {
     this.dep = dep
     this.sub = sub
   }
@@ -20,7 +20,7 @@ export class Link {
  * @param dep
  * @param sub
  */
-export function link(dep: Dep, sub: ReactiveEffect) {
+export function link(dep: Dep, sub: Sub) {
   const currentDep = sub.depsTail
   const nextDep = currentDep === undefined ? sub.deps : currentDep.nextDep
 
@@ -68,9 +68,9 @@ function processComputedUpdate(sub: ComputedRefImpl) {
    * 1. 调用 update
    * 2. 通知 subs 链表上所有的 sub, 重新执行
    */
-
-  sub.update()
-  propagate(sub.subs)
+  if (sub.subs && sub.update()) {
+    propagate(sub.subs)
+  }
 }
 
 /**
@@ -82,7 +82,8 @@ export function propagate(subs: Link) {
   const queuedEffects = []
   while (link) {
     const sub = link.sub
-    if (!sub.tracking) {
+    if (!sub.tracking && !sub.dirty) {
+      sub.dirty = true
       if ('update' in sub) {
         // TODO 处理 computed
         processComputedUpdate(sub)
@@ -99,7 +100,7 @@ export function propagate(subs: Link) {
  * 开始追踪依赖, 将depsTail尾节点设置成undefined
  * @param sub
  */
-export function startTrack(sub: ReactiveEffect) {
+export function startTrack(sub: Sub) {
   sub.tracking = true
   // 副作用函数首次或重复执行时, 将尾节点置为空, 开始重新收集依赖
   sub.depsTail = undefined
@@ -109,9 +110,11 @@ export function startTrack(sub: ReactiveEffect) {
  * 结束追踪，找到需要清理的依赖，断开关联关系
  * @param sub
  */
-export function endTrack(sub: ReactiveEffect) {
+export function endTrack(sub: Sub) {
   sub.tracking = false
   const depsTail = sub.depsTail
+  // 追踪完了，不脏了
+  sub.dirty = false
   /**
    * 1. 结束追踪后, 有   尾节点 并且还有下一个节点, 则清理掉他们
    * 2. 结束追踪后, 没有 尾节点, 则从头部开始清理

@@ -103,7 +103,7 @@ function track(target, key) {
   }
   let dep = depsMap.get(key)
   if (!dep) {
-    depsMap.set(key, (dep = new Dep()))
+    depsMap.set(key, (dep = new Dep(target[key])))
   }
   link(dep, activeSub)
 }

@@ -36,15 +36,17 @@ function link(dep, sub) {
   }
 }
 function processComputedUpdate(sub) {
-  sub.update();
-  propagate(sub.subs);
+  if (sub.subs && sub.update()) {
+    propagate(sub.subs);
+  }
 }
 function propagate(subs) {
   let link2 = subs;
   const queuedEffects = [];
   while (link2) {
     const sub = link2.sub;
-    if (!sub.tracking) {
+    if (!sub.tracking && !sub.dirty) {
+      sub.dirty = true;
       if ("update" in sub) {
         processComputedUpdate(sub);
       } else {
@@ -62,6 +64,7 @@ function startTrack(sub) {
 function endTrack(sub) {
   sub.tracking = false;
   const depsTail = sub.depsTail;
+  sub.dirty = false;
   if (depsTail) {
     if (depsTail.nextDep) {
       clearTracking(depsTail.nextDep);
@@ -149,6 +152,10 @@ function isFunction(value) {
 var Dep = class {
   subs;
   subsTail;
+  _value;
+  constructor(dep) {
+    this._value = dep;
+  }
 };
 
 // packages/reactivity/src/reactive.ts
@@ -204,7 +211,7 @@ function track(target, key) {
   }
   let dep = depsMap.get(key);
   if (!dep) {
-    depsMap.set(key, dep = new Dep());
+    depsMap.set(key, dep = new Dep(target[key]));
   }
   link(dep, activeSub);
 }
@@ -229,8 +236,9 @@ var RefImpl = class {
   _value;
   // ref 标记, 证明是一个 ref
   ["__v_isRef" /* IS_REF */] = true;
-  dep = new Dep();
+  dep;
   constructor(value) {
+    this.dep = new Dep(this);
     this._value = isObject(value) ? reactive(value) : value;
   }
   get value() {
@@ -264,7 +272,6 @@ function isRef(value) {
 
 // packages/reactivity/src/computed.ts
 var ComputedRefImpl = class {
-  //endregion
   constructor(fn, setter) {
     this.fn = fn;
     this.setter = setter;
@@ -293,8 +300,14 @@ var ComputedRefImpl = class {
    */
   depsTail;
   tracking = false;
+  //endregion
+  // 计算属性, 脏不脏, 如果 dirty 为 true, 表示计算属性是脏的
+  // get value 的时候, 需要执行 update
+  dirty = true;
   get value() {
-    this.update();
+    if (this.dirty) {
+      this.update();
+    }
     if (activeSub) {
       link(this, activeSub);
     }
@@ -312,7 +325,9 @@ var ComputedRefImpl = class {
     setActiveSub(this);
     startTrack(this);
     try {
+      const oldValue = this._value;
       this._value = this.fn();
+      return hasChanged(this._value, oldValue);
     } finally {
       endTrack(this);
       setActiveSub(prevSub);

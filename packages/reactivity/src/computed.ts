@@ -1,4 +1,4 @@
-import { isFunction } from '@vue/shared'
+import { hasChanged, isFunction } from '@vue/shared'
 import { ReactiveFlags } from './ref'
 import { Dep, Sub } from './dep'
 import { activeSub, ReactiveEffect, setActiveSub } from './effect'
@@ -37,13 +37,19 @@ export class ComputedRefImpl implements Dep, Sub {
   tracking = false
   //endregion
 
+  // 计算属性, 脏不脏, 如果 dirty 为 true, 表示计算属性是脏的
+  // get value 的时候, 需要执行 update
+  dirty = true
+
   constructor(
     public fn, // getter
     private setter,
   ) {}
 
   get value() {
-    this.update()
+    if (this.dirty) {
+      this.update()
+    }
     /**
      * 要和 sub 做关联关系
      */
@@ -74,7 +80,12 @@ export class ComputedRefImpl implements Dep, Sub {
     setActiveSub(this)
     startTrack(this)
     try {
+      // 拿到老值
+      const oldValue = this._value
+      // 拿到新值
       this._value = this.fn()
+      // 如果值发生了变化, 就返回true, 否则就是 false
+      return hasChanged(this._value, oldValue)
     } finally {
       endTrack(this)
 

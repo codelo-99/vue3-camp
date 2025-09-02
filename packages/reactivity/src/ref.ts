@@ -14,8 +14,9 @@ export class RefImpl {
   // ref 标记, 证明是一个 ref
   [ReactiveFlags.IS_REF] = true
 
-  dep = new Dep()
+  dep: Dep
   constructor(value) {
+    this.dep = new Dep(this)
     /**
      * 如果 value 是一个对象, 那么我们使用 reactive 对它处理为响应式对象
      */
