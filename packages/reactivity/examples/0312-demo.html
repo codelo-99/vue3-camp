@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>computed缓存效果</title>
+  </head>
+  <body style="padding: 150px">
+    <script type="module">
+      // import {
+      //   ref,
+      //   watch,
+      // } from '../../../node_modules/vue/dist/vue.esm-browser.js'
+      import { ref, watch } from '../dist/index.esm.js'
+
+      const count = ref(0)
+
+      const stop = watch(count, (newValue, oldValue) => {
+        console.log('fn', newValue, oldValue)
+      })
+
+      setTimeout(() => {
+        count.value = 1
+        stop()
+      }, 1000)
+
+      setTimeout(() => {
+        count.value = 2
+      }, 1100)
+    </script>
+  </body>
+</html>

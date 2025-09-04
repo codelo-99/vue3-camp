@@ -12,9 +12,13 @@ export function setActiveSub(sub: Sub) {
 }
 
 export class ReactiveEffect {
+  // 表示这个 effect 是否激活
+  active = true
+
   deps: Link | undefined
   depsTail: Link | undefined
   tracking = false
+  dirty = false
 
   constructor(public fn) {}
   run() {
@@ -37,6 +41,14 @@ export class ReactiveEffect {
   }
   notify() {
     this.scheduler()
+  }
+  stop() {
+    console.log('stop')
+    if (this.active) {
+      // 清理依赖
+      startTrack(this)
+      endTrack(this)
+    }
   }
 }
 

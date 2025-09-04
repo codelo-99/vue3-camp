@@ -105,9 +105,12 @@ var ReactiveEffect = class {
   constructor(fn) {
     this.fn = fn;
   }
+  // 表示这个 effect 是否激活
+  active = true;
   deps;
   depsTail;
   tracking = false;
+  dirty = false;
   run() {
     const prevSub = activeSub;
     setActiveSub(this);
@@ -124,6 +127,13 @@ var ReactiveEffect = class {
   }
   notify() {
     this.scheduler();
+  }
+  stop() {
+    console.log("stop");
+    if (this.active) {
+      startTrack(this);
+      endTrack(this);
+    }
   }
 };
 function effect(fn, options) {
@@ -345,6 +355,26 @@ function computed(getterOrOptions) {
   }
   return new ComputedRefImpl(getter, setter);
 }
+
+// packages/reactivity/src/watch.ts
+function watch(source, cb, options) {
+  let getter;
+  if (isRef(source)) {
+    getter = () => source.value;
+  }
+  let oldValue;
+  function job() {
+    const newValue = effect2.run();
+    cb(newValue, oldValue);
+    oldValue = newValue;
+  }
+  const effect2 = new ReactiveEffect(getter);
+  effect2.scheduler = job;
+  oldValue = effect2.run();
+  return () => {
+    effect2.stop();
+  };
+}
 export {
   ComputedRefImpl,
   Dep,
@@ -364,6 +394,7 @@ export {
   reactive,
   ref,
   setActiveSub,
-  startTrack
+  startTrack,
+  watch
 };
 //# sourceMappingURL=index.esm.js.map
