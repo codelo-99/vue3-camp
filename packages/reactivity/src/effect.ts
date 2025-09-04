@@ -43,7 +43,6 @@ export class ReactiveEffect {
     this.scheduler()
   }
   stop() {
-    console.log('stop')
     if (this.active) {
       // 清理依赖
       startTrack(this)

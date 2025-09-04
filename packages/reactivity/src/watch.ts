@@ -1,11 +1,22 @@
 import { ReactiveEffect } from './effect'
 import { isRef } from './ref'
 
-export function watch(source, cb, options) {
+export function watch(source, cb, options = {}) {
+  const { immediate, once, deep } = options
+
+  if (once) {
+    // 如果 once 传了, 那就保存一份, 新的 cb 等于,直接调用原来的, 加上 stop 停止监听
+    const _cb = cb
+    cb = (...args) => {
+      _cb(...args)
+      effect.stop()
+    }
+  }
+
   let getter
 
   if (isRef(source)) {
-    getter = () => source.value
+    getter = () => (deep ? source.value : source.value)
   }
 
   let oldValue
@@ -22,7 +33,11 @@ export function watch(source, cb, options) {
   const effect = new ReactiveEffect(getter)
   effect.scheduler = job
 
-  oldValue = effect.run()
+  if (immediate) {
+    job()
+  } else {
+    oldValue = effect.run()
+  }
 
   return () => {
     effect.stop()

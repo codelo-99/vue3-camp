@@ -14,18 +14,24 @@
 
       const count = ref(0)
 
-      const stop = watch(count, (newValue, oldValue) => {
-        console.log('fn', newValue, oldValue)
-      })
+      const stop = watch(
+        count,
+        (newValue, oldValue) => {
+          console.log('fn', newValue, oldValue)
+        },
+        {
+          immediate: true,
+          once: true,
+        },
+      )
 
       setTimeout(() => {
         count.value = 1
-        stop()
+        // stop()
+        setTimeout(() => {
+          count.value = 2
+        }, 100)
       }, 1000)
-
-      setTimeout(() => {
-        count.value = 2
-      }, 1100)
     </script>
   </body>
 </html>
