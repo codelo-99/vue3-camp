@@ -1,5 +1,6 @@
 import { ReactiveEffect } from './effect'
 import { isRef } from './ref'
+import { isObject } from '@vue/shared'
 
 export function watch(source, cb, options = {}) {
   const { immediate, once, deep } = options
@@ -17,6 +18,11 @@ export function watch(source, cb, options = {}) {
 
   if (isRef(source)) {
     getter = () => (deep ? source.value : source.value)
+  }
+
+  if (deep) {
+    const baseGetter = getter
+    getter = () => traverse(baseGetter())
   }
 
   let oldValue
@@ -42,4 +48,22 @@ export function watch(source, cb, options = {}) {
   return () => {
     effect.stop()
   }
+}
+
+function traverse(value, seen = new Set()) {
+  if (!isObject(value)) {
+    return value
+  }
+
+  if (seen.has(value)) {
+    return value
+  }
+  seen.add(value)
+
+  for (const key in value) {
+    const item = value[key]
+    traverse(item, seen)
+  }
+
+  return value
 }

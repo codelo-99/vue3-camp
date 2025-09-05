@@ -12,7 +12,11 @@
       // } from '../../../node_modules/vue/dist/vue.esm-browser.js'
       import { ref, watch } from '../dist/index.esm.js'
 
-      const count = ref(0)
+      const count = ref({
+        a: 0,
+      })
+
+      count.value.c = count.value
 
       const stop = watch(
         count,
@@ -20,16 +24,17 @@
           console.log('fn', newValue, oldValue)
         },
         {
-          immediate: true,
-          once: true,
+          // immediate: true,
+          // once: true,
+          deep: true,
         },
       )
 
       setTimeout(() => {
-        count.value = 1
+        count.value.a = 1
         // stop()
         setTimeout(() => {
-          count.value = 2
+          count.value.a = 2
         }, 100)
       }, 1000)
     </script>

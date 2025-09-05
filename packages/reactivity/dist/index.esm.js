@@ -129,7 +129,6 @@ var ReactiveEffect = class {
     this.scheduler();
   }
   stop() {
-    console.log("stop");
     if (this.active) {
       startTrack(this);
       endTrack(this);
@@ -357,10 +356,22 @@ function computed(getterOrOptions) {
 }
 
 // packages/reactivity/src/watch.ts
-function watch(source, cb, options) {
+function watch(source, cb, options = {}) {
+  const { immediate, once, deep } = options;
+  if (once) {
+    const _cb = cb;
+    cb = (...args) => {
+      _cb(...args);
+      effect2.stop();
+    };
+  }
   let getter;
   if (isRef(source)) {
-    getter = () => source.value;
+    getter = () => deep ? source.value : source.value;
+  }
+  if (deep) {
+    const baseGetter = getter;
+    getter = () => traverse(baseGetter());
   }
   let oldValue;
   function job() {
@@ -370,10 +381,28 @@ function watch(source, cb, options) {
   }
   const effect2 = new ReactiveEffect(getter);
   effect2.scheduler = job;
-  oldValue = effect2.run();
+  if (immediate) {
+    job();
+  } else {
+    oldValue = effect2.run();
+  }
   return () => {
     effect2.stop();
   };
+}
+function traverse(value, seen = /* @__PURE__ */ new Set()) {
+  if (!isObject(value)) {
+    return value;
+  }
+  if (seen.has(value)) {
+    return value;
+  }
+  seen.add(value);
+  for (const key in value) {
+    const item = value[key];
+    traverse(item, seen);
+  }
+  return value;
 }
 export {
   ComputedRefImpl,
