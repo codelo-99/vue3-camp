@@ -84,6 +84,7 @@ export class ComputedRefImpl implements Dep, Sub {
       const oldValue = this._value
       // 拿到新值
       this._value = this.fn()
+      this.dirty = false
       // 如果值发生了变化, 就返回true, 否则就是 false
       return hasChanged(this._value, oldValue)
     } finally {

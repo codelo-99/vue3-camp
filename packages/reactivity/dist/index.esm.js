@@ -17,6 +17,11 @@ function link(dep, sub) {
     sub.depsTail = nextDep;
     return;
   }
+  let existingLink = dep.subs;
+  while (existingLink) {
+    if (existingLink.sub === sub) return;
+    existingLink = existingLink.nextSub;
+  }
   const link2 = new Link(dep, sub);
   link2.nextDep = nextDep;
   if (!dep.subsTail) {
@@ -36,8 +41,11 @@ function link(dep, sub) {
   }
 }
 function processComputedUpdate(sub) {
-  if (sub.subs && sub.update()) {
-    propagate(sub.subs);
+  if (sub.subs) {
+    sub.dirty = true;
+    if (sub.update()) {
+      propagate(sub.subs);
+    }
   }
 }
 function propagate(subs) {
@@ -45,8 +53,7 @@ function propagate(subs) {
   const queuedEffects = [];
   while (link2) {
     const sub = link2.sub;
-    if (!sub.tracking && !sub.dirty) {
-      sub.dirty = true;
+    if (!sub.tracking) {
       if ("update" in sub) {
         processComputedUpdate(sub);
       } else {
@@ -64,7 +71,6 @@ function startTrack(sub) {
 function endTrack(sub) {
   sub.tracking = false;
   const depsTail = sub.depsTail;
-  sub.dirty = false;
   if (depsTail) {
     if (depsTail.nextDep) {
       clearTracking(depsTail.nextDep);
@@ -336,6 +342,7 @@ var ComputedRefImpl = class {
     try {
       const oldValue = this._value;
       this._value = this.fn();
+      this.dirty = false;
       return hasChanged(this._value, oldValue);
     } finally {
       endTrack(this);
