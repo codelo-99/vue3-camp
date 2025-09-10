@@ -22,7 +22,8 @@ export function watch(source, cb, options = {}) {
 
   if (deep) {
     const baseGetter = getter
-    getter = () => traverse(baseGetter())
+    const depth = deep === true ? Infinity : deep
+    getter = () => traverse(baseGetter(), depth)
   }
 
   let oldValue
@@ -50,19 +51,24 @@ export function watch(source, cb, options = {}) {
   }
 }
 
-function traverse(value, seen = new Set()) {
-  if (!isObject(value)) {
+function traverse(value, depth = Infinity, seen = new Set()) {
+  // 如果不是一个对象, 或者监听层级到了, 直接返回 value
+  if (!isObject(value) || depth <= 0) {
     return value
   }
 
+  // 如果之前访问过, 那直接返回, 防止循环引用栈溢出
   if (seen.has(value)) {
     return value
   }
+  // 加到 seen 中
   seen.add(value)
 
+  // 层级 -1
+  depth--
   for (const key in value) {
-    const item = value[key]
-    traverse(item, seen)
+    // 递归触发 getter
+    traverse(value[key], depth, seen)
   }
 
   return value

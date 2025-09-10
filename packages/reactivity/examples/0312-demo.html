@@ -13,10 +13,12 @@
       import { ref, watch } from '../dist/index.esm.js'
 
       const count = ref({
-        a: 0,
+        a: {
+          b: {
+            c: 0,
+          },
+        },
       })
-
-      count.value.c = count.value
 
       const stop = watch(
         count,
@@ -26,16 +28,16 @@
         {
           // immediate: true,
           // once: true,
-          deep: true,
+          deep: 1,
         },
       )
 
       setTimeout(() => {
         count.value.a = 1
         // stop()
-        setTimeout(() => {
-          count.value.a = 2
-        }, 100)
+        // setTimeout(() => {
+        //   count.value.a = 2
+        // }, 100)
       }, 1000)
     </script>
   </body>

@@ -378,7 +378,8 @@ function watch(source, cb, options = {}) {
   }
   if (deep) {
     const baseGetter = getter;
-    getter = () => traverse(baseGetter());
+    const depth = deep === true ? Infinity : deep;
+    getter = () => traverse(baseGetter(), depth);
   }
   let oldValue;
   function job() {
@@ -397,17 +398,17 @@ function watch(source, cb, options = {}) {
     effect2.stop();
   };
 }
-function traverse(value, seen = /* @__PURE__ */ new Set()) {
-  if (!isObject(value)) {
+function traverse(value, depth = Infinity, seen = /* @__PURE__ */ new Set()) {
+  if (!isObject(value) || depth <= 0) {
     return value;
   }
   if (seen.has(value)) {
     return value;
   }
   seen.add(value);
+  depth--;
   for (const key in value) {
-    const item = value[key];
-    traverse(item, seen);
+    traverse(value[key], depth, seen);
   }
   return value;
 }
