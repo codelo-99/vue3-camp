@@ -9,8 +9,9 @@
       // import {
       //   ref,
       //   watch,
+      //   reactive,
       // } from '../../../node_modules/vue/dist/vue.esm-browser.js'
-      import { ref, watch } from '../dist/index.esm.js'
+      import { ref, watch, reactive } from '../dist/index.esm.js'
 
       const count = ref({
         a: {
@@ -21,19 +22,19 @@
       })
 
       const stop = watch(
-        count,
+        () => count.value,
         (newValue, oldValue) => {
           console.log('fn', newValue, oldValue)
         },
         {
           // immediate: true,
           // once: true,
-          deep: 1,
+          deep: 3,
         },
       )
 
       setTimeout(() => {
-        count.value.a = 1
+        count.value.a.b.c = 1
         // stop()
         // setTimeout(() => {
         //   count.value.a = 2

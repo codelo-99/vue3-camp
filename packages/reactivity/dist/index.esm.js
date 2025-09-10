@@ -364,7 +364,7 @@ function computed(getterOrOptions) {
 
 // packages/reactivity/src/watch.ts
 function watch(source, cb, options = {}) {
-  const { immediate, once, deep } = options;
+  let { immediate, once, deep } = options;
   if (once) {
     const _cb = cb;
     cb = (...args) => {
@@ -375,6 +375,13 @@ function watch(source, cb, options = {}) {
   let getter;
   if (isRef(source)) {
     getter = () => deep ? source.value : source.value;
+  } else if (isReactive(source)) {
+    if (deep === void 0) {
+      deep = true;
+    }
+    getter = () => source;
+  } else if (isFunction(source)) {
+    getter = source;
   }
   if (deep) {
     const baseGetter = getter;

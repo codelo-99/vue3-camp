@@ -1,9 +1,10 @@
 import { ReactiveEffect } from './effect'
 import { isRef } from './ref'
-import { isObject } from '@vue/shared'
+import { isFunction, isObject } from '@vue/shared'
+import { isReactive } from './reactive'
 
 export function watch(source, cb, options = {}) {
-  const { immediate, once, deep } = options
+  let { immediate, once, deep } = options
 
   if (once) {
     // 如果 once 传了, 那就保存一份, 新的 cb 等于,直接调用原来的, 加上 stop 停止监听
@@ -18,6 +19,14 @@ export function watch(source, cb, options = {}) {
 
   if (isRef(source)) {
     getter = () => (deep ? source.value : source.value)
+  } else if (isReactive(source)) {
+    if (deep === undefined) {
+      deep = true
+    }
+    getter = () => source
+  } else if (isFunction(source)) {
+    // 如果 source 是一个函数, 那 getter 就等于 source
+    getter = source
   }
 
   if (deep) {
@@ -51,6 +60,12 @@ export function watch(source, cb, options = {}) {
   }
 }
 
+/**
+ * 递归触发 getter
+ * @param value
+ * @param depth
+ * @param seen
+ */
 function traverse(value, depth = Infinity, seen = new Set()) {
   // 如果不是一个对象, 或者监听层级到了, 直接返回 value
   if (!isObject(value) || depth <= 0) {
